@@ -4,6 +4,14 @@
 
 線やメモは自動保存され、元のPDFファイルは変更しません。描画、付箋、ページメモ、最終ページ、ページ訪問回数は、PDF内容のSHA-256をキーにした別のデータとして保存します。
 
+## 配布版を使う
+
+初版の配布対象はApple Silicon搭載Mac（M1以降）、macOS 14以降です。GitHub Releasesに公開されたZIPを展開し、`PaperPDFPrototype.app` を「アプリケーション」フォルダに移動してください。Xcodeは不要です。
+
+配布版は簡易署名のみで、Developer ID署名・Appleの公証はありません。初回に警告が出た場合、配布元を確認したうえで「システム設定 → プライバシーとセキュリティ → このまま開く」から、このアプリを許可します。[Appleの起動手順](https://support.apple.com/ja-jp/102445)も参照してください。管理されたMacでは、この操作が制限される場合があります。
+
+アプリ内の自動更新はありません。次の版もReleasesから入手してアプリを入れ替えます。メモはApplication Supportに保存されるので、そのまま引き継がれます。
+
 ## 現在の機能
 
 - PDFKitによるPDF表示、テキスト選択・コピー、拡大縮小、ページ移動
@@ -73,17 +81,53 @@ Xcodeでは`Package.swift`を開き、`PaperPDFPrototype`スキームを実行�
 ## テスト
 
 ```bash
-swift test
+./Scripts/test.sh
 ```
 
-サイドカーの往復保存と旧形式互換、PDF本体が変更されないことに加え、最近のPDFの並び順・重複排除・上限・壊れた履歴の除去をテストします。
+サイドカーの往復保存と旧形式互換、PDF本体が変更されないことに加え、最近のPDFの並び順・重複排除・上限・壊れた履歴の復旧と退避、紙の質感の段階と上限をテストします。スクリプトはSwiftPMとClangのキャッシュをプロジェクト内に保存します。
 
-作成時にはXcode 26.3、Swift 6.2.4でアプリのコンパイル・リンクとテスト7件の成功を確認しています。Xcodeの選択状況は次のコマンドで確認できます。
+Xcode 26.3、Swift 6.2.4でアプリのコンパイル・リンクとテスト11件の成功を確認しています。Xcodeの選択状況は次のコマンドで確認できます。
 
 ```bash
 xcode-select -p
 xcodebuild -version
 ```
+
+## リリースを作る
+
+Apple Developer Programへの加入や署名証明書、Apple向けの認証情報は不要です。
+
+バージョンの基準は `AppBundle/Info.plist` の `CFBundleShortVersionString`（現在は `0.1.0`）です。更新時はこの値と `CFBundleVersion` を更新し、対応する `releases/vX.Y.Z.md` に変更点と制限を書きます。タグは同じバージョンに `v` を付けます。
+
+Apple SiliconのMacとXcode 26.3で、配布物をローカルに作れます。
+
+```bash
+./Scripts/test.sh
+./Scripts/verify-pdfkit.sh
+./Scripts/package-release.sh v0.1.0
+```
+
+`dist/v0.1.0/` に、Release構成でビルドしたアプリのZIPとSHA-256ファイルを出力します。ZIPを展開した状態で署名・バージョン・CPUアーキテクチャを検証します。開発用の `PaperPDFPrototype.app` は置き換えません。タグとアプリのバージョンが異なる場合や、リリースノートがない場合は停止します。
+
+GitHubのリポジトリに接続してコードをpushした後、リリースするコミットにタグを付けて送ります。
+
+```bash
+git tag -a v0.1.0 -m "Paper PDF Prototype v0.1.0"
+git push origin v0.1.0
+```
+
+`.github/workflows/release.yml` がmacOSのランナーとXcode 26.3でテスト、PDFKit検証、ZIP作成を行い、ZIP・SHA-256・リリースノート付きの **Draft Release** を作ります。GitHub標準の `GITHUB_TOKEN` を使用するので、個人アクセストークンの登録は不要です。失敗後の再実行では同じ下書きを更新し、公開済みのリリースは変更しません。
+
+公開前には、下書きからダウンロードしたZIPで次を確認します。
+
+- 初回の起動許可を経てPDFを開ける
+- 線・付箋・ページメモを残して終了し、再起動すると復元される
+- ページ位置が復元され、見開き・ズーム・取り消しを操作できる
+- 可能なら別のMacでも起動できる。macOS 14での実機確認が未実施なら、その旨をリリースノートに追記する
+
+確認後、GitHubのReleases画面で下書きを公開します。自動では公開しません。
+
+標準のGitHub Actionsランナーは公開リポジトリでは無料です。非公開リポジトリでは無料枠と従量料金があるため、費用を避けたい場合はローカルで作ったZIPとSHA-256を手動でReleaseに添付できます。[GitHubのランナーと料金の説明](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)
 
 ## 次の検証候補
 

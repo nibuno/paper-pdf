@@ -2,9 +2,15 @@
 
 set -euo pipefail
 
+if (( $# > 1 )) || [[ "${1:-debug}" != (debug|release) ]]; then
+  print -u2 "使い方: $0 [debug|release]"
+  exit 64
+fi
+
+CONFIGURATION=${1:-debug}
 PROJECT_DIR=${0:A:h:h}
 BUILD_DIR=${PAPERPDF_BUILD_DIR:-"$PROJECT_DIR/.build"}
-APP_DIR="$PROJECT_DIR/PaperPDFPrototype.app"
+APP_DIR=${PAPERPDF_APP_DIR:-"$PROJECT_DIR/PaperPDFPrototype.app"}
 SWIFTPM_CACHE_DIR="$BUILD_DIR/swiftpm-cache"
 SWIFTPM_CONFIG_DIR="$BUILD_DIR/swiftpm-config"
 SWIFTPM_SECURITY_DIR="$BUILD_DIR/swiftpm-security"
@@ -22,6 +28,7 @@ trap 'rm -rf "$STAGING_ROOT"' EXIT
 
 BUILD_ARGUMENTS=(
   --disable-sandbox
+  --configuration "$CONFIGURATION"
   --package-path "$PROJECT_DIR"
   --scratch-path "$BUILD_DIR"
   --cache-path "$SWIFTPM_CACHE_DIR"
@@ -47,6 +54,7 @@ codesign --verify --deep --strict "$STAGED_APP_DIR"
 
 # Finder and file providers can attach metadata to an opened app. Sign a fresh
 # bundle in the build directory, then replace the generated app atomically.
+mkdir -p "${APP_DIR:h}"
 if [[ -e "$APP_DIR" ]]; then
   mv "$APP_DIR" "$PREVIOUS_APP_DIR"
 fi
