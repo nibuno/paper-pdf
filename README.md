@@ -93,6 +93,15 @@ xcode-select -p
 xcodebuild -version
 ```
 
+## アイコンを作り直す
+
+アイコンは `Tools/generate_app_icon.swift` で描いた画像から作ります。デザインを変えたら、次のコマンドで `AppBundle/Resources/AppIcon.icns` を作り直し、アプリをビルドし直します。
+
+```bash
+./Scripts/make-icon.sh
+./Scripts/build-app.sh
+```
+
 ## リリースを作る
 
 Apple Developer Programへの加入や署名証明書、Apple向けの認証情報は不要です。

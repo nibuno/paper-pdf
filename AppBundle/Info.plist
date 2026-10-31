@@ -19,6 +19,8 @@
   </array>
   <key>CFBundleExecutable</key>
   <string>PaperPDFPrototype</string>
+  <key>CFBundleIconFile</key>
+  <string>AppIcon</string>
   <key>CFBundleIdentifier</key>
   <string>local.paperpdf.prototype</string>
   <key>CFBundleInfoDictionaryVersion</key>
