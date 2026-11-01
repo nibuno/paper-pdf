@@ -44,6 +44,30 @@
 
 最近のPDFにはmacOSのsecurity-scoped bookmarkを保存します。これは選んだPDFへ再アクセスするための許可証データであり、PDF本体のコピーではありません。履歴はMac内のApplication Supportにだけ保存され、ファイルメニューから消去できます。
 
+## メモのバックアップと引っ越し
+
+書き込みはPDFには入りません。線・付箋・ページメモ・読書位置は、すべて次のフォルダに保存されます。
+
+```text
+~/Library/Application Support/PaperPDFPrototype/
+```
+
+このフォルダと元のPDFの両方が揃って、はじめて元の状態に戻せます。Time Machineを使っているなら対象に入っていますが、PDFを別の場所（外付けディスクやクラウド）に置いている場合は、そちらもバックアップに含めてください。
+
+別のMacへ移すときは、アプリを入れたうえで、このフォルダをコピーします。
+
+```bash
+# 移行元で
+ditto ~/Library/Application\ Support/PaperPDFPrototype ~/Desktop/PaperPDFPrototype-backup
+
+# 移行先で（アプリを終了した状態で実行します）
+ditto ~/Desktop/PaperPDFPrototype-backup ~/Library/Application\ Support/PaperPDFPrototype
+```
+
+サイドカーはPDFの中身のSHA-256で紐づきます。PDFを別のフォルダに移したり名前を変えたりしても、同じファイルなら書き込みは見つかります。逆に、PDFを作り直した場合（別版を買い直した、圧縮し直したなど）は別のPDFとして扱われ、以前の書き込みは表示されません。
+
+アプリを使うのをやめるときは、`PaperPDFPrototype.app` を捨てるだけでは上のフォルダは残ります。書き込みも消すなら、このフォルダごと削除してください。削除すると元に戻せません。
+
 ## PDFKit互換性だけを先に確認する
 
 この検証はSwiftツールチェーンに依存せず、現在のmacOS PDFKitを直接呼びます。引数なしの場合は日本語テストPDFを生成して検証します。
@@ -85,6 +109,8 @@ Xcodeでは`Package.swift`を開き、`PaperPDFPrototype`スキームを実行�
 ```
 
 サイドカーの往復保存と旧形式互換、PDF本体が変更されないことに加え、最近のPDFの並び順・重複排除・上限・壊れた履歴の復旧と退避、紙の質感の段階と上限をテストします。スクリプトはSwiftPMとClangのキャッシュをプロジェクト内に保存します。
+
+mainへのpushとプルリクエストでは、`.github/workflows/test.yml` がmacOSのランナーで同じテストとPDFKit検証を実行します。
 
 Xcode 26.3、Swift 6.2.4でアプリのコンパイル・リンクとテスト11件の成功を確認しています。Xcodeの選択状況は次のコマンドで確認できます。
 
@@ -144,3 +170,7 @@ git push origin v0.1.0
 - 選択文字のベースラインに吸着する「補助付き鉛筆線」
 - 図やコードブロックへの矩形メモ
 - ページ滞在時間を使った、読み飛ばしと読書の区別
+
+## ライセンス
+
+MIT License（[LICENSE](LICENSE)）。
